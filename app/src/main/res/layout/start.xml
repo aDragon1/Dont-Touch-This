@@ -42,6 +42,7 @@
         android:id="@+id/editText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:hint ="Введите номер вагона"
         android:ems="10"
         android:minHeight="48dp"
         app:layout_constraintBottom_toTopOf="@+id/nextWPAct"

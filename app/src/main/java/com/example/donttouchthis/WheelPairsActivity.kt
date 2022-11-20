@@ -11,7 +11,6 @@ import org.apache.poi.ss.usermodel.Workbook
 import org.apache.poi.ss.usermodel.WorkbookFactory
 import java.io.File
 import java.io.FileInputStream
-import java.util.concurrent.Flow
 import kotlin.system.measureTimeMillis
 
 class WheelPairsActivity : AppCompatActivity() {
@@ -20,7 +19,6 @@ class WheelPairsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val time = measureTimeMillis {
             val expListView: ExpandableListView = findViewById(R.id.expListView)
 
             val groupTo = intArrayOf(android.R.id.text1)
@@ -56,6 +54,8 @@ class WheelPairsActivity : AppCompatActivity() {
 
             calcTotalRun(wheelData, bearingData, searches, numWheel, numBearing)
 
+        wheelData.sortBy { it[0] }
+
             // expandableListAdapterData
             for (i in 0 until numWheel) {
                 for (search: String in searches) {
@@ -83,56 +83,60 @@ class WheelPairsActivity : AppCompatActivity() {
             expListView.setAdapter(adapter)
 
             setInfoText(" Найдено позиций: ${childDataList.toArray().size}")
-        }
-        println(time)
-}
+    }
 
-    private fun shouldShow(el0:String, el4:String, search:String): Boolean {
-            if (search == el0 || search.isBlank())
-                return (el4.split(" ")[0].toInt() > 2000000) || el4.contains("и")
-            return false
-        }
+    private fun shouldShow(el0: String, el4: String, search: String): Boolean {
+        if (search == el0 || search.isBlank())
+            return (el4.split(" ")[0].toDouble() > 2000000) || el4.contains("и")
+        return false
+    }
 
-    private fun calcTotalRun(wheelData: Array<Array<String>>, bearingData: Array<Array<String>>, searches:List<String>, numWheel:Int, numBearing:Int) {
+    private fun calcTotalRun(
+        wheelData: Array<Array<String>>,
+        bearingData: Array<Array<String>>,
+        searches: List<String>,
+        numWheel: Int,
+        numBearing: Int,
+    ) {
         for (i in 0 until numWheel) {
-            for (search: String in searches) {
-
-                if (search == wheelData[i][0] || search.isEmpty()) {
-
-                    for (j in 0 until numBearing) {
-
-                        if (bearingData[j][0].isNotEmpty() && wheelData[i][2].toInt() == bearingData[j][0].toInt()) {
-                                wheelData[i][4] =
-                                    if (isNumber(bearingData[j][1]) && bearingData[j][1].toInt() != 0) {
-                                        (wheelData[i][3].toInt() + bearingData[j][1].toInt()).toString()
-                                    } else
-                                        wheelData[i][3] + " и " + bearingData[j][1]
-
-                        }
-                    }
-                }
-            }
+            for (search: String in searches)
+                if (search == wheelData[i][0] || search.isEmpty())
+                    for (j in 0 until numBearing)
+                        if (bearingData[j][0].isNotEmpty() && wheelData[i][2].toDouble() == bearingData[j][0].toDouble())
+                            if (isNumber(bearingData[j][1])) {
+                                if (bearingData[j][1].toDouble() != .0)
+                                    wheelData[i][4] =
+                                        (wheelData[i][3].toDouble() + bearingData[j][1].toDouble()).toString()
+                            } else wheelData[i][4] = wheelData[i][3] + " и " + bearingData[j][1]
         }
     }
 
 
-    private fun setBearingsData(arr:Array<Array<String>>, num:Int, sheet: Sheet?): Array<Array<String>> {
+    private fun setBearingsData(
+        arr: Array<Array<String>>,
+        num: Int,
+        sheet: Sheet?,
+    ): Array<Array<String>> {
 
         for (i in 0 until num) {
-            var wpN: String = sheet?.getRow(i+1)?.getCell(1).toString().replace(".0","").trim()
-            var run: String = sheet?.getRow(i+1)?.getCell(3).toString().replace(".0","").trim()
+            var wpN: String = sheet?.getRow(i + 1)?.getCell(1).toString().replace(".0", "").trim()
+            var run: String = sheet?.getRow(i + 1)?.getCell(3).toString().replace(".0", "").trim()
             arr[i][0] = wpN
             arr[i][1] = run
         }
         return arr
     }
 
-    private fun setWheelsData(arr:Array<Array<String>>, num:Int, sheet: Sheet?): Array<Array<String>> {
+    private fun setWheelsData(
+        arr: Array<Array<String>>,
+        num: Int,
+        sheet: Sheet?,
+    ): Array<Array<String>> {
         for (i in 0 until num) {
-            val tN  = sheet?.getRow(i+1)?.getCell(1).toString().replace(".0", "").trim()
-            val pos = sheet?.getRow(i+1)?.getCell(4).toString().replace(".0", "").trim()
-            val wpN = sheet?.getRow(i+1)?.getCell(5).toString().replace(".0", "").trim()
-            val run = sheet?.getRow(i+1)?.getCell(12).toString().replace(".0","").trim()
+            val tN = sheet?.getRow(i + 1)?.getCell(1).toString().replace(".0", "").trim()
+            val pos = sheet?.getRow(i + 1)?.getCell(4).toString().replace(".0", "").trim()
+            val wpN = sheet?.getRow(i + 1)?.getCell(5).toString().replace(".0", "").trim()
+            val run = sheet?.getRow(i + 1)?.getCell(12).toString().replace(".0", "").trim()
 
             arr[i][0] = tN
             arr[i][1] = pos
@@ -144,22 +148,23 @@ class WheelPairsActivity : AppCompatActivity() {
         return arr
     }
 
-    private fun getSheet(path: String):Sheet? {
+    private fun getSheet(path: String): Sheet? {
         return try {
             val f = File(path)
             val fis = FileInputStream(f)
             val wb: Workbook = WorkbookFactory.create(fis)
             wb.getSheetAt(0)
-        }catch (ex:Exception){
+        } catch (ex: Exception) {
             setInfoText("$ex")
             null
         }
     }
 
-    private fun getNumberOfRows(sheet:Sheet?):Int = if (sheet == null) 0 else (sheet.physicalNumberOfRows - 1)
+    private fun getNumberOfRows(sheet: Sheet?): Int =
+        if (sheet == null) 0 else (sheet.physicalNumberOfRows - 1)
 
-    private fun setInfoText(text:String){
-        var eText:TextView = findViewById(R.id.eTextView)
+    private fun setInfoText(text: String) {
+        var eText: TextView = findViewById(R.id.eTextView)
         eText.append("\n$text")
     }
 }
