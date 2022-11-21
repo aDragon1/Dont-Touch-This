@@ -15,7 +15,7 @@
         android:id="@+id/expListView"
         android:layout_height="match_parent"
         android:layout_width="match_parent"
-        android:indicatorLeft="?android:attr/expandableListPreferredItemIndicatorLeft"
+        android:indicatorLeft="?android:attr/expandableListPreferredItemIndicatorRight"
         android:divider="@android:color/darker_gray"
         android:dividerHeight="1dp" />
 </LinearLayout>

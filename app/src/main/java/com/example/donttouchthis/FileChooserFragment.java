@@ -27,14 +27,12 @@ public class FileChooserFragment extends Fragment {
 
     public Button buttonBrowse;
     public TextView editTextPath;
-    private View rootView;
-
-
+    private String filePath;
 
 
     @Override
     public View onCreateView(final LayoutInflater inflater, final ViewGroup container, final Bundle savedInstanceState) {
-        rootView = inflater.inflate(R.layout.fragment_file_chooser, container, false);
+        View rootView = inflater.inflate(R.layout.fragment_file_chooser, container, false);
 
         editTextPath = rootView.findViewById(R.id.editText_path);
         buttonBrowse = rootView.findViewById(R.id.button_browse);
@@ -44,7 +42,7 @@ public class FileChooserFragment extends Fragment {
     }
 
 
-    private void askPermissionAndBrowseFile()  {
+    private void askPermissionAndBrowseFile() {
         // With Android Level >= 23, you have to ask the user
         // for permission to access External Storage.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.BASE) { // Level 23
@@ -65,7 +63,7 @@ public class FileChooserFragment extends Fragment {
         this.doBrowseFile();
     }
 
-    private void doBrowseFile()  {
+    private void doBrowseFile() {
         Intent chooseFileIntent = new Intent(Intent.ACTION_GET_CONTENT);
         chooseFileIntent.setType("*/*");
         // Only return URIs that can be opened with ContentResolver
@@ -108,17 +106,20 @@ public class FileChooserFragment extends Fragment {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
             case MY_RESULT_CODE_FILECHOOSER:
-                if (resultCode == Activity.RESULT_OK ) {
-                    if(data != null)  {
+                if (resultCode == Activity.RESULT_OK) {
+                    if (data != null) {
                         Uri fileUri = data.getData();
 
                         String filePath = null;
                         try {
-                            filePath = FileUtils.getPath(this.getContext(),fileUri);
+                            filePath = FileUtils.getPath(this.getContext(), fileUri);
                         } catch (Exception e) {
                             Toast.makeText(this.getContext(), "Error: " + e, Toast.LENGTH_SHORT).show();
                         }
-                        this.editTextPath.setText(filePath);
+                        String[] fileDir = filePath.split("/");
+                        String fileName = fileDir[fileDir.length - 1];
+                        this.filePath = filePath;
+                        this.editTextPath.setText(fileName);
                     }
                 }
                 break;
@@ -126,7 +127,7 @@ public class FileChooserFragment extends Fragment {
         super.onActivityResult(requestCode, resultCode, data);
     }
 
-    public String getPath()  {
-        return this.editTextPath.getText().toString();
+    public String getPath() {
+        return this.filePath;
     }
 }
